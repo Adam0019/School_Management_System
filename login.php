@@ -17,7 +17,7 @@ include('Config/dbcon.php');
   <body>
     <div class="container" id="container">
       <div class="form-container sign-up">
-        <form>
+        <form action="signup_check.php" method="POST">
           <h1>Create Account</h1>
           <div class="social-icons">
             <a href="#" class="icon"
@@ -30,10 +30,10 @@ include('Config/dbcon.php');
             ></a>
           </div>
           <span>or use your email for registeration</span>
-          <input type="text" placeholder="Name" />
-          <input type="email" placeholder="Email" />
-          <input type="password" placeholder="Password" />
-          <button>Sign Up</button>
+          <input type="text" id="username"  name="username" class="input" placeholder="Name"  required/>
+          <input type="email" id="u_email"  name="u_email" class="input" placeholder="Email"  required/>
+          <input type="password" id="password" data-type="password" name="password" class="input" placeholder="Password"  required/>
+          <button type="submit" class="button" value="Signup" name="submit">Sign Up</button>
         </form>
       </div>
       <div class="form-container sign-in">
@@ -49,7 +49,7 @@ include('Config/dbcon.php');
               ><i class="fa-brands fa-linkedin-in"></i
             ></a>
           </div>
-          <span>or use your email password</span>
+          <span>or use your username & password</span>
           <input type="text"  id="username" name="username" class="input" placeholder="Username" required />
           <input type="password" id="password" data-type="password" name="password" class="input" placeholder="Password" required  />
           <a href="#">Forget Your Password?</a>
