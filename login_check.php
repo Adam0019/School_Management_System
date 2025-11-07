@@ -1,5 +1,5 @@
 <?php
-include('config/dbcon.php');
+include('Config/dbcon.php');
 
 if (isset($_POST['submit'])){
     $username=$_POST['username'];

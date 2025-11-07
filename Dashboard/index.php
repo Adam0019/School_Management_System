@@ -1,8 +1,8 @@
 <?php
-include('../includes/header.php');
+include('../Includes/header.php');
 if($_SESSION['userAuth']!="" && $_SESSION['userAuth']!=NULL){
-include('../includes/sidebar.php');
-include('../includes/navbar.php');
+include('../Includes/sidebar.php');
+include('../Includes/navbar.php');
 
 ?>
 
@@ -149,5 +149,5 @@ include('../includes/navbar.php');
 
 <?php
 }
-include('../includes/footer.php');
+include('../Includes/footer.php');
 ?>
