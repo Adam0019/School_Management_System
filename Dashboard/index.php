@@ -1,12 +1,13 @@
 <?php
 include('../Includes/header.php');
-if($_SESSION['userAuth']!="" && $_SESSION['userAuth']!=NULL){
+// if($_SESSION['userAuth']!="" && $_SESSION['userAuth']!=NULL){
 include('../Includes/sidebar.php');
 include('../Includes/navbar.php');
 
+
+
 ?>
 
-	
 	
 
 	
@@ -148,6 +149,6 @@ include('../Includes/navbar.php');
 </html>
 
 <?php
-}
+// }
 include('../Includes/footer.php');
 ?>

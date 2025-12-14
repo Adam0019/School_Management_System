@@ -1,75 +1,88 @@
 <?php
-
+session_start();
 include('Config/dbcon.php');
-// header("Content-Type: application/json");
 
 if(isset($_POST['submit'])){
-    if (!isset($_POST['username']) || !isset($_POST['u_email']) || !isset($_POST['password']) ) {   //|| !isset($_POST['role'])
+    if (!isset($_POST['u_name']) || !isset($_POST['u_email']) || !isset($_POST['password'])) {
         echo json_encode(["error" => "Missing required fields"]);
-        exit;}
-        $username = $_POST['username'];
-        $email = $_POST['u_email'];
-        $password = $_POST['password'];
-        // $role = $_POST['role'];
-        echo $username;
+        exit;
+    }
+    
+    $u_name = trim($_POST['u_name']);
+    $u_email = trim($_POST['u_email']);
+    $password = $_POST['password'];
+    $username = trim($_POST['u_email']);
 
-    $stmt = $pdo->prepare("SELECT * FROM user_tbl WHERE username =:username");
-    $stmt->execute([$username]);
-    if ($stmt-> fetch()){
+    // Basic server-side validation
+    if(strlen($u_name) < 2) {
+        exit("Name must be at least 2 characters.");
+    }
+    if (!filter_var($u_email, FILTER_VALIDATE_EMAIL)) {
+        exit("Invalid email.");
+    }
+    if (strlen($password) < 8) {
+        exit("Password must be at least 8 characters.");
+    }
+
+    // Check if username already exists
+    $stmt = $pdo->prepare("SELECT * FROM user_tbl WHERE username = :username");
+    $stmt->bindParam(':username', $username);
+    $stmt->execute();
+    
+    if ($stmt->fetch()){
         echo '<script>
         alert("Username already exists");
         window.location.href="login.php";
         </script>';
         exit;
+    } else {
+        // Hash password (IMPORTANT!)
+        $password_hash = password_hash($password, PASSWORD_DEFAULT);
+
+        // Generate 6-digit OTP
+        $verification_token = random_int(100000, 999999);
+
+        $sql = "INSERT INTO user_tbl (u_name, u_email, username, password) 
+                VALUES (:u_name, :u_email, :username, :password)";
+
+        try {
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':u_name', $u_name);
+            $stmt->bindParam(':u_email', $u_email);
+            $stmt->bindParam(':username', $username);
+            $stmt->bindParam(':password', $password_hash);
+           
+            
+            if($stmt->execute()){
+                // Get the newly created user ID
+                $new_user_id = $pdo->lastInsertId();
+
+                 $sql1 = "INSERT INTO otp_tbl (verification_token, u_id, created_at) 
+                VALUES (:verification_token, :u_id, NOW())";
+         try {
+            $stmt1 = $pdo->prepare($sql1);
+            $stmt1->bindParam(':verification_token', $verification_token);
+            $stmt1->bindParam(':u_id', $new_user_id);
+
+            if($stmt1->execute()){
+                $_SESSION['verification_token'] = $verification_token;
+                $_SESSION['u_id'] = $new_user_id;
+                $_SESSION['u_name'] = $u_name;
+                $_SESSION['u_email'] = $u_email;
+                include('mail_handle.php');
+                exit();
+            }
+        } catch (Exception $e) {
+            echo "Error generating OTP: " . $e->getMessage();
+        }        
+     }
+        } catch (PDOException $e) {
+           
+            echo '<script>
+            alert("Registration failed! ' . $e->getMessage() . '");
+            window.location.href="signup.php";
+            </script>';
+        }
     }
-else{
-    $sql = "INSERT INTO user_tbl ( u_email, username, password) VALUES ( :email, :username, :password)";
-
-    try{
-    $stmt = $pdo->prepare($sql);
-    // $stmt-> bindParam(':name', $name);
-    $stmt-> bindParam(':email', $email);
-    // $stmt-> bindParam(':phone', $phone);
-    $stmt-> bindParam(':username', $username);
-    $stmt-> bindParam(':password', $password);
-    // $stmt-> bindParam(':role', $role);
-    if($stmt-> execute()){
-        $_SESSION['userAuth'] = "Authorised";}
-     $_SESSION['toastr']=['
-            type' => 'success', // success, error, info, warning
-            'message' => 'User created successfully!'
-    ];
-
-    // if(isset($_POST['fromUser'])){
-    //     // header('Location: ../User/user.php');
-    //     // exit();
-    //     echo json_encode(["success" => "User created successfully"]);
-    //     exit();
-    // }
-
-    header('Location:Dashboard/index.php');
-    exit();
-    }catch (PDOException $e){
-        $_SESSION['toastr']=[
-            'type' => 'danger',
-            'message' => 'User is not created! Error:' . $e->getMessage()
-        ];
-    }
-    }}
-
-    // if ($stmt->execute()) {
-    //     echo '<script>
-    //     alert("Registration successful!");
-    //     window.location.href="index.php";
-    //     </script>';
-    // } else {
-    //     echo '<script>
-    //     alert("Registration failed!");
-    //     window.location.href="signup.php";
-    //     </script>';
-    // }
-
-
-
-
+}
 ?>

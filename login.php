@@ -30,9 +30,23 @@ include('Config/dbcon.php');
             ></a>
           </div>
           <span>or use your email for registeration</span>
-          <input type="text" id="username"  name="username" class="input" placeholder="Name"  required/>
-          <input type="email" id="u_email"  name="u_email" class="input" placeholder="Email"  required/>
-          <input type="password" id="password" data-type="password" name="password" class="input" placeholder="Password"  required/>
+          
+          <div class="input-group">
+            <input type="text" id="u_name"  name="u_name" class="input" placeholder="Name"  required/>
+            <p class="input-error" data-error-for="u_name"></p>
+          </div>
+          
+          <div class="input-group">
+            <input type="email" id="u_email"  name="u_email" class="input" placeholder="Email" required/>
+            <p class="input-error" data-error-for="u_email"></p>
+          </div>
+          
+          <div class="input-group">
+            <input type="password" id="password" data-type="password" name="password" class="input" placeholder="Password" required/>
+            <p class="input-error" data-error-for="password"></p>
+            <p class="input-hint">Min 8 char, include letters & numbers</p>
+          </div>
+          
           <button type="submit" class="button" value="Signup" name="submit">Sign Up</button>
         </form>
       </div>
@@ -50,8 +64,17 @@ include('Config/dbcon.php');
             ></a>
           </div>
           <span>or use your username & password</span>
-          <input type="text"  id="username" name="username" class="input" placeholder="Username" required />
-          <input type="password" id="password" data-type="password" name="password" class="input" placeholder="Password" required  />
+          
+          <div class="input-group">
+            <input type="text"  id="username" name="username" class="input" placeholder="Username" required />
+            <!-- <p class="input-hint">Enter your registered username</p> -->
+          </div>
+          
+          <div class="input-group">
+            <input type="password" id="password" data-type="password" name="password" class="input" placeholder="Password" required  />
+            <!-- <p class="input-hint">Your secure password</p> -->
+          </div>
+          
           <a href="#">Forget Your Password?</a>
           <button type="submit" class="button" value="Login" name="submit">Login</button>
         </form>
@@ -75,5 +98,6 @@ include('Config/dbcon.php');
     </div>
 
     <script src="script.js"></script>
+    <script src="form_error.js"></script>
   </body>
 </html>
