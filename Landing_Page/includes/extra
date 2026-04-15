@@ -1,0 +1,296 @@
+<?php
+session_start();
+include('../Config/dbcon.php');
+$login_type = isset($_SESSION['login_type']) ? $_SESSION['login_type'] : '';
+// $_SESSION['type'] = $login_type;
+
+if (isset($_POST['submit'])) {
+    // Validate required fields
+    if (!isset($_POST['name']) || !isset($_POST['email']) || !isset($_POST['password'])) {
+        echo '<script>
+        alert("Missing required fields");
+        window.location.href="login.php";
+        </script>';
+        exit();
+    }
+
+    // Teacher Registration
+    if ($login_type == 'Teacher') {
+        $t_name = trim($_POST['name']);
+        $t_email = trim($_POST['email']);
+        $password = $_POST['password'];
+        $username = trim($_POST['email']);
+
+        // Server-side validation
+        if (strlen($t_name) < 2) {
+            echo '<script>
+            alert("Name must be at least 2 characters.");
+            window.location.href="login.php?action=Teacher";
+            </script>';
+            exit();
+        }
+        if (!filter_var($t_email, FILTER_VALIDATE_EMAIL)) {
+            echo '<script>
+            alert("Invalid email address.");
+            window.location.href="login.php?action=Teacher";
+            </script>';
+            exit();
+        }
+        if (strlen($password) < 8) {
+            echo '<script>
+            alert("Password must be at least 8 characters.");
+            window.location.href="login.php?action=Teacher";
+            </script>';
+            exit();
+        }
+
+        // Check if username already exists
+        $stmt = $pdo->prepare("SELECT * FROM teacher_tbl WHERE username = :username");
+        $stmt->bindParam(':username', $username);
+        $stmt->execute();
+        
+        if ($stmt->fetch()) {
+            echo '<script>
+            alert("Username already exists");
+            window.location.href="login.php?action=Teacher";
+            </script>';
+            exit();
+        }
+
+        // Hash password
+        $password_hash = password_hash($password, PASSWORD_DEFAULT);
+
+        $sql = "INSERT INTO teacher_tbl (t_name, t_email, username, password) 
+                VALUES (:t_name, :t_email, :username, :password)";
+
+        try {
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':t_name', $t_name);
+            $stmt->bindParam(':t_email', $t_email);
+            $stmt->bindParam(':username', $username);
+            $stmt->bindParam(':password', $password_hash);
+
+            if ($stmt->execute()) {
+                // Get the newly created teacher ID
+                $new_teacher_id = $pdo->lastInsertId();
+
+                // Generate 6-digit OTP
+                $verification_token = random_int(100000, 999999);
+
+                $sql1 = "INSERT INTO otp_tbl (verification_token, t_id, created_at) 
+                        VALUES (:verification_token, :t_id, NOW())";
+                
+                try {
+                    $stmt1 = $pdo->prepare($sql1);
+                    $stmt1->bindParam(':verification_token', $verification_token);
+                    $stmt1->bindParam(':t_id', $new_teacher_id);
+
+                    if ($stmt1->execute()) {
+                        // Regenerate session ID for security
+                        session_regenerate_id(true);
+                        
+                        $_SESSION['verification_token'] = $verification_token;
+                        $_SESSION['t_id'] = $new_teacher_id;
+                        $_SESSION['t_name'] = $t_name;
+                        $_SESSION['t_email'] = $t_email;
+                        $_SESSION['type'] = $login_type;
+                        include('../Mail/mail_handle.php');
+                        header("Location: verify_otp.php");
+                        exit();
+                    }
+                } catch (Exception $e) {
+                    echo '<script>
+                    alert("Error sending verification code. Please try logging in.");
+                    window.location.href="login.php?action=Teacher";
+                    </script>';
+                    exit();
+                }
+            }
+        } catch (PDOException $e) {
+            echo '<script>
+            alert("Registration failed! Please try again.");
+            window.location.href="login.php?action=Teacher";
+            </script>';
+            exit();
+        }
+    } 
+    // Student Registration
+    else if ($login_type == 'Student') {
+        $s_name = trim($_POST['name']);
+        $s_email = trim($_POST['email']);
+        $password = $_POST['password'];
+        $username = trim($_POST['email']);
+
+        // Server-side validation
+        if (strlen($s_name) < 2) {
+            echo '<script>
+            alert("Name must be at least 2 characters.");
+            window.location.href="login.php?action=Student";
+            </script>';
+            exit();
+        }
+        if (!filter_var($s_email, FILTER_VALIDATE_EMAIL)) {
+            echo '<script>
+            alert("Invalid email address.");
+            window.location.href="login.php?action=Student";
+            </script>';
+            exit();
+        }
+        if (strlen($password) < 8) {
+            echo '<script>
+            alert("Password must be at least 8 characters.");
+            window.location.href="login.php?action=Student";
+            </script>';
+            exit();
+        }
+
+        // Check if username already exists
+        $stmt = $pdo->prepare("SELECT * FROM student_tbl WHERE username = :username");
+        $stmt->bindParam(':username', $username);
+        $stmt->execute();
+        
+        if ($stmt->fetch()) {
+            echo '<script>
+            alert("Username already exists");
+            window.location.href="login.php?action=Student";
+            </script>';
+            exit();
+        }
+
+        // Hash password
+        $password_hash = password_hash($password, PASSWORD_DEFAULT);
+
+        $sql = "INSERT INTO student_tbl (s_name, s_email, username, password) 
+                VALUES (:s_name, :s_email, :username, :password)";
+
+        try {
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':s_name', $s_name);
+            $stmt->bindParam(':s_email', $s_email);
+            $stmt->bindParam(':username', $username);
+            $stmt->bindParam(':password', $password_hash);
+
+            if ($stmt->execute()) {
+                echo '<script>
+                alert("Student registration successful. Please login.");
+                window.location.href="login.php?action=Student";
+                </script>';
+                exit();
+            }
+        } catch (PDOException $e) {
+            echo '<script>
+            alert("Registration failed! Please try again.");
+            window.location.href="login.php?action=Student";
+            </script>';
+            exit();
+        }
+    } 
+    // Regular User Registration
+    else {
+        $u_name = trim($_POST['name']);
+        $u_email = trim($_POST['email']);
+        $password = $_POST['password'];
+        $username = trim($_POST['email']);
+
+        // Server-side validation
+        if (strlen($u_name) < 2) {
+            echo '<script>
+            alert("Name must be at least 2 characters.");
+            window.location.href="login.php";
+            </script>';
+            exit();
+        }
+        if (!filter_var($u_email, FILTER_VALIDATE_EMAIL)) {
+            echo '<script>
+            alert("Invalid email address.");
+            window.location.href="login.php";
+            </script>';
+            exit();
+        }
+        if (strlen($password) < 8) {
+            echo '<script>
+            alert("Password must be at least 8 characters.");
+            window.location.href="login.php";
+            </script>';
+            exit();
+        }
+
+        // Check if username already exists
+        $stmt = $pdo->prepare("SELECT * FROM user_tbl WHERE username = :username");
+        $stmt->bindParam(':username', $username);
+        $stmt->execute();
+
+        if ($stmt->fetch()) {
+            echo '<script>
+            alert("Username already exists");
+            window.location.href="login.php";
+            </script>';
+            exit();
+        }
+
+        // Hash password
+        $password_hash = password_hash($password, PASSWORD_DEFAULT);
+
+        // Generate 6-digit OTP
+        $verification_token = random_int(100000, 999999);
+        $u_key = random_int(100000, 999999);
+
+        $sql = "INSERT INTO user_tbl (u_name, u_email, username, password, u_key) 
+                VALUES (:u_name, :u_email, :username, :password, :u_key)";
+
+        try {
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':u_name', $u_name);
+            $stmt->bindParam(':u_email', $u_email);
+            $stmt->bindParam(':username', $username);
+            $stmt->bindParam(':password', $password_hash);
+            $stmt->bindParam(':u_key', $u_key);
+
+            if ($stmt->execute()) {
+                // Get the newly created user ID
+                $new_user_id = $pdo->lastInsertId();
+
+                $sql1 = "INSERT INTO otp_tbl (verification_token, u_id, created_at) 
+                        VALUES (:verification_token, :u_id, NOW())";
+                
+                try {
+                    $stmt1 = $pdo->prepare($sql1);
+                    $stmt1->bindParam(':verification_token', $verification_token);
+                    $stmt1->bindParam(':u_id', $new_user_id);
+
+                    if ($stmt1->execute()) {
+                        // Regenerate session ID for security
+                        session_regenerate_id(true);
+                        
+                        $_SESSION['verification_token'] = $verification_token;
+                        $_SESSION['u_id'] = $new_user_id;
+                        $_SESSION['u_name'] = $u_name;
+                        $_SESSION['u_email'] = $u_email;
+                        $_SESSION['u_key'] = $u_key;
+                        $_SESSION['type'] = $login_type;
+                        include('../Mail/mail_handle.php');
+                        header("Location: verify_otp.php");
+                        exit();
+                    }
+                } catch (Exception $e) {
+                    echo '<script>
+                    alert("Error sending verification code. Please try logging in.");
+                    window.location.href="login.php";
+                    </script>';
+                    exit();
+                }
+            }
+        } catch (PDOException $e) {
+            echo '<script>
+            alert("Registration failed! Please try again.");
+            window.location.href="login.php";
+            </script>';
+            exit();
+        }
+    }
+} else {
+    // Direct access without form submission
+    header("Location: login.php");
+    exit();
+}
+?>

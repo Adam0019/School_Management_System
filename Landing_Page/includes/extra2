@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Page 2 - Result</title>
+</head>
+<body>
+    <h1>Result Page</h1>
+    
+    <?php
+    if (isset($_GET['action'])) {
+        $selectedOption = $_GET['action'];
+        
+        echo "<p>You selected: <strong>" . htmlspecialchars($selectedOption) . "</strong></p>";
+        
+        // You can do different things based on the value
+        switch($selectedOption) {
+            case 'option1':
+                echo "<p>You chose Option 1 - This could show content A</p>";
+                break;
+            case 'option2':
+                echo "<p>You chose Option 2 - This could show content B</p>";
+                break;
+            case 'option3':
+                echo "<p>You chose Option 3 - This could show content C</p>";
+                break;
+            default:
+                echo "<p>Unknown option selected</p>";
+        }
+    } else {
+        echo "<p>No option was selected. Please go back and choose one.</p>";
+    }
+    ?>
+    
+    <br>
+    <a href="page1.php">Go Back</a>
+</body>
+</html>
+```
+
+## Output Examples:
+
+**When you click "Option 1" button:**
+- URL becomes: `page2.php?action=option1`
+- Page displays:
+```
+  Result Page
+  
+  You selected: option1
+  
+  You chose Option 1 - This could show content A
+  
+  Go Back
+```
+
+**When you click "Option 2" button:**
+- URL becomes: `page2.php?action=option2`
+- Page displays:
+```
+  Result Page
+  
+  You selected: option2
+  
+  You chose Option 2 - This could show content B
+  
+  Go Back
+```
+
+**When you click "Option 3" button:**
+- URL becomes: `page2.php?action=option3`
+- Page displays:
+```
+  Result Page
+  
+  You selected: option3
+  
+  You chose Option 3 - This could show content C
+  
+  Go Back
+```
+
+**If you navigate directly to page2.php without parameters:**
+- URL is: `page2.php`
+- Page displays:
+```
+  Result Page
+  
+  No option was selected. Please go back and choose one.
+  
+  Go Back

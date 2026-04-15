@@ -1,0 +1,37 @@
+<?php
+include('../Config/dbcon.php');
+session_start();
+
+if (isset($_POST['submit'])) {
+    $username = $_POST['username'];
+    $password = $_POST['password'];
+$sql="SELECT * FROM student_tbl WHERE username=:username";
+        $smt= $pdo->prepare($sql);
+        $smt->execute(['username'=>$username]);
+        $student=$smt->fetch(PDO::FETCH_ASSOC);
+
+        if($student && password_verify($password, $student['password'])){
+            // Regenerate session ID to prevent session fixation
+            session_regenerate_id(true);
+
+            $_SESSION["s_id"] = $student["s_id"];
+            $_SESSION['s_name'] = $student["s_name"];
+            $_SESSION['s_gender'] = $student["s_gender"];
+            $_SESSION['s_img'] = $student["s_img"];
+            $_SESSION['s_class'] = $student["s_class"];
+
+            // include("../../Landing_Page/home.php");
+            header("Location: ../Landing_Page/home.php");
+            exit();
+        } else {
+    
+    echo '<script>
+    alert("Invalid username or password");  // Changed from "Error processing login"
+    window.location.href="student_login.php";
+    </script>';
+            exit();
+        }
+} else {
+    header('Location: student_login.php');
+}
+    ?>
